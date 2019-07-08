@@ -17,6 +17,10 @@ from keras.utils import plot_model
 from keras import backend as K
 from keras.layers import *
 
+import matplotlib
+import matplotlib.pyplot as plt
+
+
 def load_data_npz(npz_path):
     d = np.load(npz_path)
 
@@ -423,6 +427,16 @@ def main():
             x3 = model3(inputs)
             outputs = Average()([x1,x2,x3])
             model = Model(inputs=inputs,outputs=outputs)
+
+        _, (ax) = plt.subplots(1, 1, figsize=(4, 4))
+        #ax.set_title(id_list[i])
+        img = np.array(x_data[0, :, :, :])
+        img[:, :, 0] = x_data[0, :, :, 2]
+        img[:, :, 2] = x_data[0, :, :, 0]
+        
+        ax.imshow(img)
+        #ax2.imshow(res['new_img'])
+        plt.show()
 
         p_data = model.predict(x_data)
         pose_matrix = np.mean(np.abs(p_data-y_data),axis=0)
