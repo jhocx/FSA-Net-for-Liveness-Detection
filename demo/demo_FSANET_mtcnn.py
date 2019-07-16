@@ -150,8 +150,8 @@ def main():
 
     while True:
         # get video frame
-        #ret, input_img = cap.read()
-        input_img = cv2.imread("/home/local/KLASS/benedict.yeoh/dev/edge-fr/klass_fr/python/tests/data/91_1.jpg")#cap.read()
+        ret, input_img = cap.read()
+       # input_img = cv2.imread("/home/local/KLASS/benedict.yeoh/dev/edge-fr/klass_fr/python/tests/data/91_1.jpg")#cap.read()
 
         img_idx = img_idx + 1
         img_h, img_w, _ = np.shape(input_img)
