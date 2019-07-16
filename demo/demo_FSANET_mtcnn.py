@@ -3,9 +3,9 @@ import cv2
 import sys
 import numpy as np
 from math import cos, sin
-from moviepy.editor import *
+#from moviepy.editor import *
 from FSANET_model import *
-from moviepy.editor import *
+#from moviepy.editor import *
 from mtcnn.mtcnn import MTCNN
 from keras import backend as K
 
@@ -63,7 +63,7 @@ def draw_results_mtcnn(detected,input_img,faces,ad,img_size,img_w,img_h,model,ti
                 
                 face = np.expand_dims(faces[i,:,:,:], axis=0)
                 p_result = model.predict(face)
-                
+                print(p_result)
                 face = face.squeeze()
                 img = draw_axis(input_img[yw1:yw2 + 1, xw1:xw2 + 1, :], p_result[0][0], p_result[0][1], p_result[0][2])
                 
@@ -71,6 +71,7 @@ def draw_results_mtcnn(detected,input_img,faces,ad,img_size,img_w,img_h,model,ti
                 
                 cv2.imshow("result", input_img)
     else:
+        print("None")
         cv2.imshow("result", input_img)
 
     return input_img #,time_network,time_plot
@@ -136,7 +137,7 @@ def main():
     x1 = model1(inputs) #1x1
     x2 = model2(inputs) #var
     x3 = model3(inputs) #w/o
-    avg_model = Average()([x1,x2,x3])
+    avg_model = x1#Average()([x1,x2,x3])
     model = Model(inputs=inputs, outputs=avg_model)
     
     # capture video
@@ -149,7 +150,8 @@ def main():
 
     while True:
         # get video frame
-        ret, input_img = cap.read()
+        #ret, input_img = cap.read()
+        input_img = cv2.imread("/home/local/KLASS/benedict.yeoh/dev/edge-fr/klass_fr/python/tests/data/91_1.jpg")#cap.read()
 
         img_idx = img_idx + 1
         img_h, img_w, _ = np.shape(input_img)
@@ -160,7 +162,8 @@ def main():
             time_plot = 0
             
             # detect faces using LBP detector
-            gray_img = cv2.cvtColor(input_img,cv2.COLOR_BGR2GRAY)
+            #gray_img = cv2.cvtColor(input_img,cv2.COLOR_BGR2GRAY)
+            input_img = cv2.cvtColor(input_img, cv2.COLOR_BGR2RGB)
             # detected = face_cascade.detectMultiScale(gray_img, 1.1)
             detected = detector.detect_faces(input_img)
 
