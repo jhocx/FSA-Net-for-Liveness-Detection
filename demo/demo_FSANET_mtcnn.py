@@ -1,6 +1,7 @@
 import os
 import cv2
 import sys
+import queue
 import numpy as np
 from math import cos, sin
 #from moviepy.editor import *
@@ -42,7 +43,7 @@ def draw_axis(img, yaw, pitch, roll, tdx=None, tdy=None, size = 80):
 
     return img
     
-def draw_results_mtcnn(detected,input_img,faces,ad,img_size,img_w,img_h,model,time_detection,time_network,time_plot):
+def draw_results_mtcnn(detected,input_img,faces,ad,img_size,img_w,img_h,model,time_detection,time_network,time_plot, past_values):
     
     if len(detected) > 0:
         for i, d in enumerate(detected):
@@ -63,18 +64,61 @@ def draw_results_mtcnn(detected,input_img,faces,ad,img_size,img_w,img_h,model,ti
                 
                 face = np.expand_dims(faces[i,:,:,:], axis=0)
                 p_result = model.predict(face)
-                print(p_result)
+                #print(p_result)
+
+                liveness_detection(p_result[0][0], p_result[0][1], p_result[0][2], past_values)
+
                 face = face.squeeze()
                 img = draw_axis(input_img[yw1:yw2 + 1, xw1:xw2 + 1, :], p_result[0][0], p_result[0][1], p_result[0][2])
                 
                 input_img[yw1:yw2 + 1, xw1:xw2 + 1, :] = img
                 
                 cv2.imshow("result", input_img)
+            else:
+                print("Low confidence")
+                cv2.imshow("result", input_img)
     else:
         print("None")
         cv2.imshow("result", input_img)
 
     return input_img #,time_network,time_plot
+    
+def liveness_detection(yaw, pitch, roll, past_values):
+    # If past_values is full, remove the oldest entry and put in the latest entry.
+    if past_values.full():
+        _ = past_values.get()
+        past_values.put((yaw, pitch, roll))
+    # Else simply put in the latest entry.
+    else:
+        past_values.put((yaw, pitch, roll))
+
+
+    past_values_list = []
+    yaw_list = []
+    # pitch_list = []
+    # roll_list = []
+
+    # When we have 5 values (full), study the standard deviation to determine change of pose. 
+    if past_values.full():
+        for x in range(past_values.qsize()):
+            value = past_values.get()
+            past_values_list.append(value)
+            past_values.put(value)
+        for i in past_values_list:
+            yaw_list.append(i[0])
+            # pitch_list.append(i[1])
+            # roll_list.append(i[2])
+        
+        # Find the standard deviation of yaw.
+        yaw_sd = np.std(yaw_list)
+        # pitch_sd = np.std(pitch_list)
+        # roll_sd = np.std(roll_list)
+        # print("SD for yaw: {}, pitch: {}, roll: {}.".format(yaw_sd, pitch_sd, roll_sd))
+        print("SD for yaw: {}.".format(yaw_sd))
+        if yaw_sd > 10:     
+            print("Human.")
+        else:
+            print("Spoof.")
 
 def main():
     try:
@@ -147,6 +191,7 @@ def main():
     
     print('Start detecting pose ...')
     detected_pre = []
+    past_values = queue.Queue(5)
 
     while True:
         # get video frame
@@ -172,11 +217,11 @@ def main():
 
             faces = np.empty((len(detected), img_size, img_size, 3))
 
-            input_img = draw_results_mtcnn(detected,input_img,faces,ad,img_size,img_w,img_h,model,time_detection,time_network,time_plot)
+            input_img = draw_results_mtcnn(detected,input_img,faces,ad,img_size,img_w,img_h,model,time_detection,time_network,time_plot,past_values)
             cv2.imwrite('img/'+str(img_idx)+'.png',input_img)
             
         else:
-            input_img = draw_results_mtcnn(detected,input_img,faces,ad,img_size,img_w,img_h,model,time_detection,time_network,time_plot)
+            input_img = draw_results_mtcnn(detected,input_img,faces,ad,img_size,img_w,img_h,model,time_detection,time_network,time_plot,past_values)
 
 
         if len(detected) > len(detected_pre) or img_idx%(skip_frame*3) == 0:
