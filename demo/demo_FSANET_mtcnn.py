@@ -3,12 +3,20 @@ import cv2
 import sys
 import queue
 import numpy as np
+import argparse
+import time
 from math import cos, sin
 #from moviepy.editor import *
 from FSANET_model import *
 #from moviepy.editor import *
 from mtcnn.mtcnn import MTCNN
 from keras import backend as K
+
+# Argument parser initialization.
+ap = argparse.ArgumentParser()
+ap.add_argument("-t", "--threshold", type=int, default=10,
+    help="Minimum threshold required to be considered human.")
+args = vars(ap.parse_args())
 
 def draw_axis(img, yaw, pitch, roll, tdx=None, tdy=None, size = 80):
 
@@ -78,7 +86,7 @@ def draw_results_mtcnn(detected,input_img,faces,ad,img_size,img_w,img_h,model,ti
                 print("Low confidence")
                 cv2.imshow("result", input_img)
     else:
-        print("None")
+        # print("None")
         cv2.imshow("result", input_img)
 
     return input_img #,time_network,time_plot
@@ -114,7 +122,7 @@ def liveness_detection(yaw, pitch, roll, past_values):
         # roll_sd = np.std(roll_list)
         # print("SD for yaw: {}, pitch: {}, roll: {}.".format(yaw_sd, pitch_sd, roll_sd))
         print("SD for yaw: {}.".format(yaw_sd))
-        if yaw_sd > 10:     
+        if yaw_sd > args["threshold"]:     
             print("Human.")
         else:
             print("Spoof.")
