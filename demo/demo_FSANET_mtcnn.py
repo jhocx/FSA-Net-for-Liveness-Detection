@@ -92,7 +92,6 @@ def liveness_detection(yaw, pitch, roll, past_values):
     else:
         past_values.put((yaw, pitch, roll))
 
-
     past_values_list = []
     yaw_list = []
     # pitch_list = []
@@ -212,8 +211,9 @@ def main():
             # detected = face_cascade.detectMultiScale(gray_img, 1.1)
             detected = detector.detect_faces(input_img)
 
-            if len(detected_pre) > 0 and len(detected) == 0:
-                detected = detected_pre
+            # Remove original code where if no new detections were made, revert to old detections.
+            # if len(detected_pre) > 0 and len(detected) == 0:
+            #     detected = detected_pre
 
             faces = np.empty((len(detected), img_size, img_size, 3))
 
